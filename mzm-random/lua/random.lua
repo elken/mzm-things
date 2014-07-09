@@ -1,0 +1,5 @@
+vba.print(memory.readbyterange(0x0300153C, 30))
+byte = math.random(80)
+memory.writebyte(0x0300153C,byte)
+memory.writebyte(0x0300153D,byte)
+vba.print(memory.readbyterange(0x0300153C, 30))
