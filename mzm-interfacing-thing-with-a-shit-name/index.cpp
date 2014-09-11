@@ -1,5 +1,5 @@
-#include <windows.h>	// Needed for windows stuff
-#include <tlhelp32.h>	// "
+#include <windows.h>		// Needed for windows stuff
+#include <tlhelp32.h>		// "
 #include <tchar.h>		// "
 #include <cstdio>		// printf and the like
 #include <sstream>		// std::stringstream
@@ -9,6 +9,7 @@
 #include <cstdint>		// std::uint64_t
 #include <bitset>		// std::bitset
 #include <iomanip>		// std::setfill, std::setw
+#include <utility>		// std::pair
 
 
 // Fairly obvious offset descriptions
@@ -36,13 +37,9 @@ std::map<int, std::string> message = {
 		{ 14, "Missles" }, 
 		{ 15, "Super missles" } };
 
-// Create structs to represent the two types of inv space (Beam and Bombs & Suit and Missles)
+// Create std::pairs to represent the two types of inv space (Beam and Bombs & Suit and Missles)
 // This is due to how both are represented in memory. See http://http://datacrystal.romhacking.net/wiki/Metroid_Zero_Mission:RAM_map
-// I might update this if I think of a better way...
-struct Stat {
-	int old;
-	int cur;
-} BaBStat, SaMStat;
+std::pair<int, int> BaBStat, SaMStat;
 
 // Create a bitset to hold the inventory values
 // Done as a bitset as its the easiest way to keep track I could think.
@@ -171,9 +168,9 @@ int main()
 		{
 			if (ReadProcessMemory(phandle, (LPCVOID)((DWORD)invAddress + INV_OFFSET), &invValue, 4, &bytesRead))
 			{
-				SaMStat.old = endian_swap(invValue);
+				SaMStat.first = endian_swap(invValue);
 
-				std::cout << "Value of GBA 0x0300153C: \t\t" << hexOutput(SaMStat.old, false) << std::endl;
+				std::cout << "Value of GBA 0x0300153C: \t\t" << hexOutput(SaMStat.first, false) << std::endl;
 			}
 			else
 			{
@@ -185,17 +182,17 @@ int main()
 			do
 			{
 				ReadProcessMemory(phandle, (LPCVOID)((DWORD)invAddress + INV_OFFSET), &invValue, 4, &bytesRead);
-				SaMStat.cur = endian_swap(invValue);
+				SaMStat.second = endian_swap(invValue);
 			//} while (SaMStat.old == SaMStat.cur);
 			} while (false);
 
 			ReadProcessMemory(phandle, (LPCVOID)((DWORD)invAddress + GAMETIME_OFFSET), &curTime, 4, &bytesRead);
 			std::cout << parseTime(curTime) << std::endl;
 
-			std::cout << "SaMStat.cur: \t\t\t\t" << (hexOutput(SaMStat.cur, false)) << std::endl << "SaMStat.old: \t\t\t\t" << hexOutput(SaMStat.old, false) << std::endl;
-			if (SaMStat.old != SaMStat.cur)
+			std::cout << "SaMStat.cur: \t\t\t\t" << (hexOutput(SaMStat.first, false)) << std::endl << "SaMStat.old: \t\t\t\t" << hexOutput(SaMStat.first, false) << std::endl;
+			if (SaMStat.first != SaMStat.second)
 			{
-				unsigned int difference = (SaMStat.cur >> 8) - (SaMStat.old >> 8);
+				unsigned int difference = (SaMStat.second >> 8) - (SaMStat.first >> 8);
 				ReadProcessMemory(phandle, (LPCVOID)((DWORD)invAddress + GAMETIME_OFFSET), &curTime, 4, &bytesRead);
 				std::cout << std::hex << curTime << std::endl;
 				invCalc(difference, 's');
